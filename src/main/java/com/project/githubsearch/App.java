@@ -98,6 +98,7 @@ public class App {
 
 
     public static void main(String[] args) {
+        //* Scanner parses query input supplied from console and assigns string to variable: input
         Scanner scanner = new Scanner(System.in);
         System.out.println("Please Input Your Query: ");
         String input = scanner.nextLine();
@@ -175,6 +176,7 @@ public class App {
         page = 1;
         per_page_limit = 30;
 
+        //* response is now the proper Response object with params obtainged from GH query
         Response response = handleCustomGithubRequest(query, lower_bound, upper_bound, page, per_page_limit);
         String nextUrlRequest;
         if (response.getTotalCount() == 0) {
@@ -445,9 +447,11 @@ public class App {
     }
 
     private static String prepareQuery(ArrayList<Query> queries) {
+    //* formats entire queries arraylist into a space-separated string
         String queriesAsString = "";
         for (int i = 0; i < queries.size(); i++) {
-            queriesAsString += queries.get(i).toStringRequest();
+            // gets FQN and method of query: "<FQN> <method> <param1>  ... <param n>"
+            queriesAsString += queries.get(i).toStringRequest(); 
             if (i != (queries.size() - 1)) queriesAsString += " ";
         }
 
@@ -464,9 +468,10 @@ public class App {
     }
 
     private static ArrayList<Query> parseQueries(String s) {
-        ArrayList<Query> queries = new ArrayList<Query>();
+    //* takes query user types in and returns an arraylist of Query objects formatted accordingly
+        ArrayList<Query> queries = new ArrayList<Query>(); //* queries start out without parameters
         
-        s = s.replace(" ", "");
+        s = s.replace(" ", ""); //* s will be the string query user types in 
         while (!s.equals("")) {
             int tagLocation = s.indexOf('#');
             int leftBracketLocation = s.indexOf('(');
@@ -481,7 +486,7 @@ public class App {
                         return new ArrayList<Query>();
             } else {
                 String fullyQualifiedName = s.substring(0, tagLocation);
-                String method = s.substring(tagLocation + 1, leftBracketLocation);
+                String method = s.substring(tagLocation + 1, leftBracketLocation); // subtring takes start and end-1 index
                 String args = s.substring(leftBracketLocation + 1, rightBracketLocation);
                 ArrayList<String> arguments = new ArrayList<String>();
                 if (!args.equals("")) { // handle if no arguments
@@ -490,6 +495,7 @@ public class App {
                         arguments.add(arr[i]);
                     }
                 }
+                //* basically instantiates a query object with the FQN, method and args of the query user typed in
                 Query query = new Query();
                 query.setFullyQualifiedName(fullyQualifiedName);
                 query.setMethod(method);
@@ -676,6 +682,7 @@ public class App {
 
         url = endpoint + "?" + PARAM_QUERY + "=" + query + "+in:file+language:java" + "&"
                 + PARAM_PAGE + "=" + page + "&" + PARAM_PER_PAGE + "=" + per_page_limit;
+        //* handleGithubRequestWithURL returns response object obtained from querying GH API
         response = handleGithubRequestWithUrl(url);
 
         return response;
