@@ -1,0 +1,1 @@
+/Users/tenghao/GitHub/github-code-search/src/main/java/com/project/githubsearch/model/GithubToken.java

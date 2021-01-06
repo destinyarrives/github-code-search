@@ -1,0 +1,1 @@
+mvn clean compile assembly:single && java -cp target/github-code-search-1.0-SNAPSHOT-jar-with-dependencies.jar com.project.githubsearch.App

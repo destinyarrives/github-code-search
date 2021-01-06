@@ -8,6 +8,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -104,11 +106,35 @@ public class App {
         String input = scanner.nextLine();
         scanner.close();
         ArrayList<Query> queries = parseQueries(input);
+
         if (queries.size() > 0) {
             printQuery(queries);
             initUniqueFolderToSaveData(queries);
             start = Instant.now();
-            processQuery(queries);
+
+            String javaProjects = "/Users/tenghao/GitHub/github-code-search/src/main/java/com/project/githubsearch/files/testing.txt";
+            try (BufferedReader br = new BufferedReader(new FileReader(javaProjects))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String content;
+                    try {
+                        content = Files.readString(Paths.get(line));
+                        System.out.println(content);
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            catch (Exception e) {
+                System.err.println(e.getMessage());
+            } 
+
+
+
+
+            // processQuery(queries);
+
             // for (int i = 0; i < resolvedData.getResolvedFiles().size(); i++) {
             //     System.out.println();
             //     System.out.println("URL: " + resolvedData.getResolvedFiles().get(i).getUrl());
@@ -176,7 +202,7 @@ public class App {
         page = 1;
         per_page_limit = 30;
 
-        //* response is now the proper Response object with params obtainged from GH query
+        //* response is now the proper Response object with params obtained from GH query
         Response response = handleCustomGithubRequest(query, lower_bound, upper_bound, page, per_page_limit);
         String nextUrlRequest;
         if (response.getTotalCount() == 0) {
@@ -243,7 +269,7 @@ public class App {
         }
 
     }
-
+    
     public static void downloadAndResolveFile (int id, String htmlUrl, ArrayList<Query> queries) {
         boolean isDownloaded = downloadFile(htmlUrl, id);
         if (isDownloaded) {
@@ -601,6 +627,24 @@ public class App {
         }
     }
 
+    private static Response handleCustomGithubRequest(String query, int lower_bound, int upper_bound, int page,
+            int per_page_limit) {
+        // The size range is exclusive
+        upper_bound++;
+        lower_bound--;
+        String size = lower_bound + ".." + upper_bound; // lower_bound < size < upper_bound
+
+        String url;
+        Response response = new Response();
+
+        url = endpoint + "?" + PARAM_QUERY + "=" + query + "+in:file+language:java" + "&"
+                + PARAM_PAGE + "=" + page + "&" + PARAM_PER_PAGE + "=" + per_page_limit;
+        //* handleGithubRequestWithURL returns response object obtained from querying GH API
+        response = handleGithubRequestWithUrl(url);
+
+        return response;
+    }
+
     private static Response handleGithubRequestWithUrl(String url) {
 
         boolean response_ok = false;
@@ -626,7 +670,7 @@ public class App {
                 JSONObject body = new JSONObject(request.body());
                 response.setTotalCount(body.getInt("total_count"));
                 if (body.getInt("total_count") > 0) {
-                    response.setItem(body.getJSONArray("items"));
+                    response.setItem(body.getJSONArray("items")); //* response's Iten is "items" returned by GH query!
                     response.setUrlRequest(request.toString());
                     response.setNextUrlRequest(getNextLinkFromResponse(request.header("Link")));
                 }
@@ -666,24 +710,6 @@ public class App {
         } while (!response_ok && responseCode != UNPROCESSABLE_ENTITY);
 
         synchronizedFeeder.releaseToken(token);
-
-        return response;
-    }
-
-    private static Response handleCustomGithubRequest(String query, int lower_bound, int upper_bound, int page,
-            int per_page_limit) {
-        // The size range is exclusive
-        upper_bound++;
-        lower_bound--;
-        String size = lower_bound + ".." + upper_bound; // lower_bound < size < upper_bound
-
-        String url;
-        Response response = new Response();
-
-        url = endpoint + "?" + PARAM_QUERY + "=" + query + "+in:file+language:java" + "&"
-                + PARAM_PAGE + "=" + page + "&" + PARAM_PER_PAGE + "=" + per_page_limit;
-        //* handleGithubRequestWithURL returns response object obtained from querying GH API
-        response = handleGithubRequestWithUrl(url);
 
         return response;
     }
