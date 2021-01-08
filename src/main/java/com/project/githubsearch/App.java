@@ -85,6 +85,7 @@ public class App {
     private static final int MAX_RESULT = 1;
 
     // folder location to save the downloaded files and jars
+    //TODO data location potentially needs to be changed so disk space isn't all used
     private static String DATA_LOCATION = "src/main/java/com/project/githubsearch/data/";
     private static final String JARS_LOCATION = "src/main/java/com/project/githubsearch/jars/";
 
@@ -119,6 +120,7 @@ public class App {
                     String content;
                     try {
                         content = Files.readString(Paths.get(line));
+                        //TODO - Process content
                         System.out.println(content);
                     }
                     catch (IOException e) {
@@ -220,6 +222,7 @@ public class App {
             
             int id = 0;
 
+            // this chunk seems to be for adding stuff progressively to the queue as cores free up
             while (resolvedData.getResolvedFiles().size() < MAX_RESULT) {
                 if (data.size() < (2 * NUMBER_CORE)) {
                     response = handleGithubRequestWithUrl(nextUrlRequest);
@@ -281,7 +284,8 @@ public class App {
                 long seconds = (timeElapsed / 1000) % 60;
                 long ms = (timeElapsed % 1000);
                 System.out.println(
-                        "Elapsed time from start: " + minutes + " minutes " + seconds + " seconds " + ms + "ms");
+                    "Elapsed time from start: " + minutes + " minutes " + seconds + " seconds " + ms + "ms");
+                //TODO the problem now is how to link the snippet with the library we found it in
                 resolvedFile.setUrl(htmlUrl);
                 System.out.println("URL: " + resolvedFile.getUrl());
                 System.out.println("Path to File: " + resolvedFile.getPathFile());
@@ -314,12 +318,16 @@ public class App {
     }
 
     private static boolean downloadFile(String htmlUrl, int fileId){
+    //* downloads file to DATA_LOCATION folder from GH link
         // convert html url to downloadable url
         // based on my own analysis
         String downloadableUrl = convertHTMLUrlToDownloadUrl(htmlUrl);
 
         // using it to make a unique name
         // replace java to txt for excluding from maven builder
+        //! this filename is probaby important to align everything
+        //! "src/main/java/com/project/githubsearch/data/files/<fileId>.txt"
+        //! id increments by 1 for every new file
         String fileName = fileId + ".txt";
 
         // System.out.println();
@@ -352,6 +360,7 @@ public class App {
     }
 
     private static ResolvedFile resolveFile(int fileId, ArrayList<Query> queries) {
+        //TODO maybe need to set pathFile at point when processQuery is called already
         String pathFile = new String(DATA_LOCATION + "files/" + fileId + ".txt");
 
         File file = new File(pathFile);
@@ -359,7 +368,7 @@ public class App {
         ArrayList<String> snippetCodes = new ArrayList<String>();
         ArrayList<Integer> lines = new ArrayList<Integer>();
 
-        ResolvedFile resolvedFile = new ResolvedFile(queries, "", "", lines, snippetCodes);
+        ResolvedFile resolvedFile = new ResolvedFile(queries, "setUrl", "", lines, snippetCodes);
         // System.out.println();
         try {
             List<String> addedJars = getNeededJars(file);
